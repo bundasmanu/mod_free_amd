@@ -25,25 +25,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Load .env into workflow
+      - name: Export .env variables to GITHUB_ENV
         run: |
-          if [ -f .env ]; then
-            set -o allexport
-            source .env
-            set +o allexport
-            echo "VERSION=${VERSION}" >> $GITHUB_ENV
-            echo "RELEASE=${RELEASE}" >> $GITHUB_ENV
-            echo "FS_USER=${FS_USER}" >> $GITHUB_ENV
-            echo "FS_GROUP=${FS_GROUP}" >> $GITHUB_ENV
-            echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
-            echo "WORKDIR=${WORKDIR}" >> $GITHUB_ENV
-            echo "FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION}" >> $GITHUB_ENV
-          fi
+          grep -v '^#' .env | xargs -d '\n' -I {} echo {} >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
           docker build \
             -f Dockerfile-centos7 \
+            --build-arg WORK_DIR=${WORK_DIR} \
             --build-arg SIGNALWIRE_USER=${SIGNALWIRE_USER} \
             --build-arg SIGNALWIRE_PASSWORD=${SIGNALWIRE_PASSWORD} \
             --build-arg VERSION=${VERSION} \
