@@ -51,4 +51,13 @@ RUN ls -la ${WORK_DIR}/rpmbuild/
 
 RUN tar -zcvf ${WORK_DIR}/rpmbuild/SOURCES/freeswitch-mod-free-amd.tar.gz -C ${WORK_DIR}/rpmbuild/BUILD mod_free_amd
 
-CMD ["bash","-c","rpmbuild -vv -bb --define \"fs_version $VERSION\" --define \"fs_release $RELEASE\" --define \"fs_user $FS_USER\" --define \"fs_group $FS_GROUP\" --define \"mod_dir $MOD_DIR\" $WORK_DIR/rpmbuild/SPECS/freeswitch-mod-free-amd.spec"]
+CMD bash -c "\
+    rpmbuild -vv -bb \
+    --define \"_topdir ${WORK_DIR}\" \
+    --define \"fs_version ${VERSION}\" \
+    --define \"fs_release ${RELEASE}\" \
+    --define \"fs_user ${FS_USER}\" \
+    --define \"fs_group ${FS_GROUP}\" \
+    --define \"mod_dir ${MOD_DIR}\" \
+    ${WORK_DIR}/rpmbuild/SPECS/freeswitch-mod-free-amd.spec \
+"
