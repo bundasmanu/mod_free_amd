@@ -24,8 +24,9 @@ RUN yum -y update && yum clean all && yum -y install \
     wget \
     git \
     gcc \
-    pkgconfig \
-    https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm
+    pkgconfig
+
+RUN yum localinstall https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm
 
 RUN yum -y install freeswitch-devel-${VERSION}
 
