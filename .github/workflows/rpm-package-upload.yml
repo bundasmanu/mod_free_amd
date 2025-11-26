@@ -1,6 +1,6 @@
 ---
 
-name: Build RPM (CentOS 7)
+name: Build and Upload RPM (CentOS 7)
 
 on:
   push:
