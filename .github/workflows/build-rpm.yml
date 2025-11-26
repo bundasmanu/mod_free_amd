@@ -36,7 +36,7 @@ jobs:
             echo "FS_USER=${FS_USER}" >> $GITHUB_ENV
             echo "FS_GROUP=${FS_GROUP}" >> $GITHUB_ENV
             echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
-            echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
+            echo "WORKDIR=${WORKDIR}" >> $GITHUB_ENV
             echo "FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION}" >> $GITHUB_ENV
           fi
 
