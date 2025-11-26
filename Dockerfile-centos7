@@ -40,7 +40,7 @@ RUN echo "$SIGNALWIRE_USER" > /etc/yum/vars/signalwireusername && \
 
 RUN yum -y install freeswitch-devel-${FREESWITCH_DEVEL_VERSION}
 
-RUN rpmdev-setuptree && \
+RUN mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS} && \
     mkdir -p ${WORK_DIR}/rpmbuild/BUILD/mod_free_amd
 
 COPY Makefile mod_free_amd.c ${WORK_DIR}/rpmbuild/BUILD/mod_free_amd/
