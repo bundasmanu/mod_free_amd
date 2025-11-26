@@ -13,10 +13,10 @@ on:
       - '**'
 
 jobs:
-  build-rpm-centos7:
+  build-rpm-centos9:
     runs-on: ubuntu-latest
     container:
-      image: centos:7
+      image: centos:9
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,11 +34,6 @@ jobs:
             echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
             echo "WORK_DIR=/usr" >> $GITHUB_ENV
           fi
-
-      - name: Fix mirrors EOL on CentOS 7
-        run: |
-            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
-            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 
       - name: Install rpm build tools + add FreeSWITCH repo
         run: |
