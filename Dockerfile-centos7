@@ -2,6 +2,8 @@ FROM centos:7
 
 ARG WORKDIR
 
+ARG SIGNALWIRE_USER
+ARG SIGNALWIRE_PASSWORD
 ARG VERSION
 ARG RELEASE
 ARG FS_USER
@@ -26,9 +28,9 @@ RUN yum -y update && yum clean all && yum -y install \
     gcc \
     pkgconfig
 
-RUN wget https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm -O /tmp/freeswitch-release.rpm && \
-    yum -y localinstall /tmp/freeswitch-release.rpm && \
-    rm -f /tmp/freeswitch-release.rpm
+RUN echo "$SIGNALWIRE_USER" > /etc/yum/vars/signalwireusername \
+    echo "$SIGNALWIRE_PASSWORD" > /etc/yum/vars/signalwiretoken \
+    yum install -y https://$(< /etc/yum/vars/signalwireusername):$(< /etc/yum/vars/signalwiretoken)@freeswitch.signalwire.com/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm epel-release
 
 RUN yum -y install freeswitch-devel-${VERSION}
 

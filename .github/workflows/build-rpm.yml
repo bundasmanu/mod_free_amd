@@ -16,6 +16,10 @@ jobs:
   build-rpm-centos7:
     runs-on: ubuntu-latest
 
+    env:
+      SIGNALWIRE_USER: ${{ secrets.SIGNALWIRE_USER }}
+      SIGNALWIRE_PASSWORD: ${{ secrets.SIGNALWIRE_PASSWORD }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +42,8 @@ jobs:
         run: |
           docker build \
             -f Dockerfile-centos7 \
+            --build-arg SIGNALWIRE_USER=${SIGNALWIRE_USER} \
+            --build-arg SIGNALWIRE_PASSWORD=${SIGNALWIRE_PASSWORD} \
             --build-arg VERSION=${VERSION} \
             --build-arg RELEASE=${RELEASE} \
             --build-arg FS_USER=${FS_USER} \
