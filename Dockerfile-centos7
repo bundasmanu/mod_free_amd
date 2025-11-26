@@ -53,7 +53,7 @@ RUN tar -zcvf ${WORK_DIR}/rpmbuild/SOURCES/freeswitch-mod-free-amd.tar.gz -C ${W
 
 CMD bash -c "\
     rpmbuild -vv -bb \
-    --define \"_topdir ${WORK_DIR}\" \
+    --define \"_topdir ${WORK_DIR}/rpmbuild\" \
     --define \"fs_version ${VERSION}\" \
     --define \"fs_release ${RELEASE}\" \
     --define \"fs_user ${FS_USER}\" \
