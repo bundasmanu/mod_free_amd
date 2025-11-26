@@ -60,7 +60,7 @@ jobs:
         run: |
           docker run --rm \
             -v /tmp/rpms:${WORK_DIR}/rpmbuild/RPMS \
-            -env-file .env \
+            --env-file .env \
             rpm-builder
 
       - name: List generated RPMs
