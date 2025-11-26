@@ -1,0 +1,86 @@
+---
+
+name: Build RPM (CentOS 7)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build-rpm-centos7:
+    runs-on: ubuntu-latest
+
+    env:
+      SIGNALWIRE_USER: ${{ secrets.SIGNALWIRE_USER }}
+      SIGNALWIRE_PASSWORD: ${{ secrets.SIGNALWIRE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export .env variables to GITHUB_ENV
+        run: |
+          if [ -f .env ]; then
+            grep -v '^#' .env | while IFS='=' read -r key value; do
+              # Remove surrounding quotes and trim whitespace
+              clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+              # Only export non-empty keys
+              if [[ -n "$key" ]]; then
+                echo "$key=$clean_value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f Dockerfile-centos7 \
+            --build-arg WORK_DIR=${WORK_DIR} \
+            --build-arg SIGNALWIRE_USER=${SIGNALWIRE_USER} \
+            --build-arg SIGNALWIRE_PASSWORD=${SIGNALWIRE_PASSWORD} \
+            --build-arg VERSION=${VERSION} \
+            --build-arg RELEASE=${RELEASE} \
+            --build-arg FS_USER=${FS_USER} \
+            --build-arg FS_GROUP=${FS_GROUP} \
+            --build-arg MOD_DIR=${MOD_DIR} \
+            --build-arg FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION} \
+            -t rpm-builder .
+
+      - name: Create temporary output folder
+        run: mkdir -p /tmp/rpms
+
+      - name: Run Docker container to build RPMs
+        run: |
+          docker run --rm \
+            -v /tmp/rpms:${WORK_DIR}/rpmbuild/RPMS \
+            --env-file .env \
+            rpm-builder
+
+      - name: List generated RPMs
+        run: ls -R /tmp/rpms
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF}" == refs/heads/master ]]; then
+            echo "tag=master-latest" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            echo "tag=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release and upload RPMs
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: /tmp/rpms/**/*.rpm
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
