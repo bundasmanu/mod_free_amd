@@ -13,6 +13,8 @@ ARG MOD_DIR
 
 ARG FREESWITCH_DEVEL_VERSION
 
+ENV RPMBUILD=${WORK_DIR}/rpmbuild
+
 WORKDIR ${WORK_DIR}
 
 ## fix to solve Centos 7 end-of-support
