@@ -28,9 +28,10 @@ RUN yum -y update && yum clean all && yum -y install \
     gcc \
     pkgconfig
 
-RUN echo "$SIGNALWIRE_USER" > /etc/yum/vars/signalwireusername \
-    echo "$SIGNALWIRE_PASSWORD" > /etc/yum/vars/signalwiretoken \
-    yum install -y https://$(< /etc/yum/vars/signalwireusername):$(< /etc/yum/vars/signalwiretoken)@freeswitch.signalwire.com/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm epel-release
+RUN echo "$SIGNALWIRE_USER" > /etc/yum/vars/signalwireusername && \
+    echo "$SIGNALWIRE_PASSWORD" > /etc/yum/vars/signalwiretoken && \
+    yum install -y https://$(< /etc/yum/vars/signalwireusername):$(< /etc/yum/vars/signalwiretoken)@freeswitch.signalwire.com/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm && \
+    yum clean all && yum repolist
 
 RUN yum -y install freeswitch-devel-${VERSION}
 
