@@ -35,7 +35,7 @@ Free Answering Machine Detection module for FreeSWITCH.
 ##############################################################################
 
 %prep
-%setup -n mod_amd
+%setup -n mod_free_amd
 
 ##############################################################################
 # Build
