@@ -15,8 +15,7 @@ on:
 jobs:
   build-rpm-centos7:
     runs-on: ubuntu-latest
-    container:
-      image: centos:7
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
