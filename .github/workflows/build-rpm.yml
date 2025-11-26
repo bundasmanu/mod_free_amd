@@ -37,6 +37,7 @@ jobs:
             echo "FS_GROUP=${FS_GROUP}" >> $GITHUB_ENV
             echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
             echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
+            echo "FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION}" >> $GITHUB_ENV
           fi
 
       - name: Build Docker image
@@ -50,6 +51,7 @@ jobs:
             --build-arg FS_USER=${FS_USER} \
             --build-arg FS_GROUP=${FS_GROUP} \
             --build-arg MOD_DIR=${MOD_DIR} \
+            --build-arg FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION} \
             -t rpm-builder .
 
       - name: Create temporary output folder
