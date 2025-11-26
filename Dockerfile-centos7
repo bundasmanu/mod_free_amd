@@ -1,0 +1,40 @@
+FROM centos:7
+
+ARG WORKDIR
+
+ARG VERSION
+ARG RELEASE
+ARG FS_USER
+ARG FS_GROUP
+ARG MOD_DIR
+
+WORKDIR ${WORKDIR}
+
+## fix to solve Centos 7 end-of-support
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+RUN yum -y update && yum clean all && yum -y install \
+    createrepo \
+    epel-release \
+    rpm-build \
+    rpmdevtools \
+    rpmlint \
+    yum-config-manager \
+    wget \
+    git \
+    gcc \
+    pkgconfig \
+    https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm
+
+RUN yum -y install freeswitch-devel-${VERSION}
+
+RUN rpmdev-setuptree
+
+COPY Makefile mod_free_amd.c ${WORKDIR}/rpmbuild/BUILD/
+
+COPY RPM/freeswitch-mod-free-amd.spec ${WORKDIR}/rpmbuild/SPECS/
+
+RUN tar -zcvf ${WORKDIR}/rpmbuild/SOURCES/freeswitch-mod-free-amd.tar.gz -C ${WORKDIR}/rpmbuild/BUILD mod_amd
+
+CMD ["bash","-c", "rpmbuild -vv -bb --define 'fs_version $VERSION' --define 'fs_release $RELEASE' --define 'fs_user $FS_USER' --define 'fs_group $FS_GROUP' --define 'mod_dir $MOD_DIR' /usr/rpmbuild/SPECS/freeswitch-mod-free-amd.spec"]

@@ -13,10 +13,10 @@ on:
       - '**'
 
 jobs:
-  build-rpm-centos9:
+  build-rpm-centos7:
     runs-on: ubuntu-latest
     container:
-      image: centos:9
+      image: centos:7
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,27 +32,36 @@ jobs:
             echo "FS_USER=${FS_USER}" >> $GITHUB_ENV
             echo "FS_GROUP=${FS_GROUP}" >> $GITHUB_ENV
             echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
-            echo "WORK_DIR=/usr" >> $GITHUB_ENV
+            echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
           fi
 
-      - name: Install rpm build tools + add FreeSWITCH repo
+      - name: Build Docker image
         run: |
-          yum -y update
-          yum -y install yum-utils tar gcc make rpm-build rpmdevtools epel-release pkgconfig https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm
-          yum -y install freeswitch-devel-${VERSION}
+          docker build \
+            -f Dockerfile-centos7 \
+            --build-arg VERSION=${VERSION} \
+            --build-arg RELEASE=${RELEASE} \
+            --build-arg FS_USER=${FS_USER} \
+            --build-arg FS_GROUP=${FS_GROUP} \
+            --build-arg MOD_DIR=${MOD_DIR} \
+            -t rpm-builder .
 
-      - name: Prepare rpmbuild tree and sources
-        run: |
-          rpmdev-setuptree
-          tar -zcvf "${WORK_DIR}/rpmbuild/SOURCES/freeswitch-mod-free-amd.tar.gz" -C "${WORK_DIR}/rpmbuild/BUILD" mod_amd
-          cp RPM/freeswitch-mod-free-amd.spec "${WORK_DIR}/rpmbuild/SPECS/"
+      - name: Create temporary output folder
+        run: mkdir -p /tmp/rpms
 
-      - name: Install freeswitch-devel (from FS repo) and build
+      - name: Run Docker container to build RPMs
         run: |
-          rpmbuild -vv -bb \
-            --define "fs_version ${VERSION}" \
-            --define "fs_release ${RELEASE}" \
-            --define "fs_user ${FS_USER}" \
-            --define "fs_group ${FS_GROUP}" \
-            --define "mod_dir ${MOD_DIR}" \
-            "${WORK_DIR}/rpmbuild/SPECS/freeswitch-mod-free-amd.spec"
+          docker run --rm \
+            -v /tmp/rpms:${WORK_DIR}/rpmbuild/RPMS \
+            -env-file .env \
+            rpm-builder
+
+      - name: List generated RPMs
+        run: ls -R /tmp/rpms
+
+      - name: Create GitHub Release and upload RPMs
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/rpms/**/*.rpm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
