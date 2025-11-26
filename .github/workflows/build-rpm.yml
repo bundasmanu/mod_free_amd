@@ -1,0 +1,63 @@
+---
+
+name: Build RPM (CentOS 7)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build-rpm-centos7:
+    runs-on: ubuntu-latest
+    container:
+      image: centos:7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load .env into workflow
+        run: |
+          if [ -f .env ]; then
+            set -o allexport
+            source .env
+            set +o allexport
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+            echo "RELEASE=${RELEASE}" >> $GITHUB_ENV
+            echo "FS_USER=${FS_USER}" >> $GITHUB_ENV
+            echo "FS_GROUP=${FS_GROUP}" >> $GITHUB_ENV
+            echo "MOD_DIR=${MOD_DIR}" >> $GITHUB_ENV
+            echo "WORK_DIR=/usr" >> $GITHUB_ENV
+          fi
+
+      - name: Fix mirrors EOL on CentOS 7
+        run: |
+            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+      - name: Install rpm build tools + add FreeSWITCH repo
+        run: |
+          yum -y update
+          yum -y install yum-utils tar gcc make rpm-build rpmdevtools epel-release pkgconfig https://files.freeswitch.org/repo/yum/centos-release/freeswitch-release-repo-0-1.noarch.rpm
+          yum -y install freeswitch-devel-${VERSION}
+
+      - name: Prepare rpmbuild tree and sources
+        run: |
+          rpmdev-setuptree
+          tar -zcvf "${WORK_DIR}/rpmbuild/SOURCES/freeswitch-mod-free-amd.tar.gz" -C "${WORK_DIR}/rpmbuild/BUILD" mod_amd
+          cp RPM/freeswitch-mod-free-amd.spec "${WORK_DIR}/rpmbuild/SPECS/"
+
+      - name: Install freeswitch-devel (from FS repo) and build
+        run: |
+          rpmbuild -vv -bb \
+            --define "fs_version ${VERSION}" \
+            --define "fs_release ${RELEASE}" \
+            --define "fs_user ${FS_USER}" \
+            --define "fs_group ${FS_GROUP}" \
+            --define "mod_dir ${MOD_DIR}" \
+            "${WORK_DIR}/rpmbuild/SPECS/freeswitch-mod-free-amd.spec"
