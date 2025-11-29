@@ -71,12 +71,15 @@ jobs:
         run: |
           cd $WORK_DIR
           MODULES_DIR=${MOD_DIR} dpkg-buildpackage -us -uc -b
+          DEB_PARENT_DIR=$(dirname $WORK_DIR)
+          mkdir -p /tmp/deb-artifacts
+          mv $DEB_PARENT_DIR/*.deb /tmp/deb-artifacts/ 2>/dev/null || true
 
-      - name: Create GitHub Release and upload RPMs
+      - name: Create GitHub Release and upload DEBs
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ matrix.debian }}-${{ env.VERSION }}
-          files: ../${{ env.WORK_DIR }}/*.deb
+          files: /tmp/deb-artifacts/*.deb
           overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
