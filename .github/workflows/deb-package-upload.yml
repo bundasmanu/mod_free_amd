@@ -73,7 +73,7 @@ jobs:
       - name: Build DEB package
         run: |
           cd $WORK_DIR
-          dpkg-buildpackage -us -uc -b
+          dpkg-buildpackage -us -uc -b -- MODULE_DIR=${MOD_DIR}
 
       - name: Upload DEBs
         uses: actions/upload-artifact@v4
