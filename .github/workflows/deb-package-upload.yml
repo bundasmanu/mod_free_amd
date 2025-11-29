@@ -78,7 +78,7 @@ jobs:
       - name: Create GitHub Release and upload RPMs
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ matrix.debian }}
+          tag_name: ${{ matrix.debian }}-${{ env.VERSION }}
           files: ../${{ env.WORK_DIR }}/*.deb
           overwrite_files: true
         env:
