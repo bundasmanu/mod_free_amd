@@ -1,0 +1,5 @@
+freeswitch-mod-free-amd (_VERSION_-_RELEASE_) stable; urgency=standard
+
+  * Initial and first packaging of mod-free-amd Freeswitch module
+
+ -- Gustavo Almeida <galmeida@broadvoice.com>  Sat, 29 Nov 2025 18:04:00 -0700
