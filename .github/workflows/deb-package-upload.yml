@@ -1,0 +1,70 @@
+---
+
+name: Build and Upload RPM (CentOS 7)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build-upload-debs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        debian: [bookworm, trixie]
+
+    container:
+      image: debian:${{ matrix.debian }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export .env variables to GITHUB_ENV
+        run: |
+          if [ -f .env ]; then
+            grep -v '^#' .env | while IFS='=' read -r key value; do
+              # Remove surrounding quotes and trim whitespace
+              clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+              # Only export non-empty keys
+              if [[ -n "$key" ]]; then
+                echo "$key=$clean_value" >> $GITHUB_ENV
+              fi
+            done
+          fi
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y wget gnupg2 lsb-release devscripts build-essential fakeroot lintian dh-make debhelper
+
+      - name: Add Freeswitch repo
+        run: |
+          wget -O - https://files.freeswitch.org/repo/deb/freeswitch-archive-keyring.asc | apt-key add -
+          echo "deb https://files.freeswitch.org/repo/deb/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/freeswitch.list
+          apt-get update
+          apt-get install -y libfreeswitch
+
+      - name: Prepare Environment for Build DEB package
+        run: |
+          mkdir -p $WORK_DIR/mod-free-amd
+          mkdir -p $WORK_DIR/debian
+          cp -rp Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
+          cp -rp DEB/debian/* $WORK_DIR/debian/
+          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" debian/changelog
+
+      - name: Build DEB package
+        run: |
+          dpkg-buildpackage -us -uc -b
+
+      - name: Upload DEBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.VERSION }}-${{ env.RELEASE }}
+          path: ${{ env.WORK_DIR }}/*.deb
