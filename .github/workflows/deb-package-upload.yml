@@ -32,6 +32,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Export .env.debian variables to GITHUB_ENV
+        shell: bash
         run: |
           echo "Checking for .env.debian file..."
           if [ -f .env.debian ]; then
@@ -39,15 +40,17 @@ jobs:
             echo "Contents:"
             cat .env.debian
             echo "---"
-            grep -v '^#' .env.debian | while IFS='=' read -r key value; do
+            while IFS='=' read -r key value; do
+              # Skip comments and empty lines
+              [[ -z "$key" || "$key" =~ ^# ]] && continue
               # Remove surrounding quotes and trim whitespace
-              clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+              clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
               # Only export non-empty keys
-              if [[ -n "$key" ]]; then
+              if [[ -n "$key" && -n "$clean_value" ]]; then
                 echo "Exporting: $key=$clean_value"
                 echo "$key=$clean_value" >> $GITHUB_ENV
               fi
-            done
+            done < <(grep -v '^#' .env.debian)
             echo "---"
             echo "Variables in GITHUB_ENV:"
             cat $GITHUB_ENV | grep -E "(WORK_DIR|VERSION|RELEASE)" || echo "No WORK_DIR, VERSION, or RELEASE found"
