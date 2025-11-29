@@ -16,6 +16,11 @@ on:
 jobs:
   build-upload-debs:
     runs-on: ubuntu-latest
+
+    env:
+      SIGNALWIRE_USER: ${{ secrets.SIGNALWIRE_USER }}
+      SIGNALWIRE_PASSWORD: ${{ secrets.SIGNALWIRE_PASSWORD }}
+
     strategy:
       matrix:
         debian: [bookworm, trixie]
@@ -46,8 +51,11 @@ jobs:
 
       - name: Add Freeswitch repo
         run: |
-          wget -O - https://files.freeswitch.org/repo/deb/freeswitch-archive-keyring.asc | apt-key add -
-          echo "deb https://files.freeswitch.org/repo/deb/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/freeswitch.list
+          wget --http-user=${SIGNALWIRE_USER} --http-password=${SIGNALWIRE_PASSWORD} -O /usr/share/keyrings/signalwire-freeswitch-repo.gpg https://freeswitch.signalwire.com/repo/deb/debian-release/signalwire-freeswitch-repo.gpg
+          echo "machine freeswitch.signalwire.com login ${SIGNALWIRE_USER} password ${SIGNALWIRE_PASSWORD}" > /etc/apt/auth.conf
+          chmod 600 /etc/apt/auth.conf
+          echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
+          echo "deb-src [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
           apt-get update
           apt-get install -y libfreeswitch
 
