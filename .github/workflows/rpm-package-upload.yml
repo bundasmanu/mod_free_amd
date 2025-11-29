@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-rpm-centos7:
+  build-rpm-upload-centos7:
     runs-on: ubuntu-latest
 
     env:
