@@ -43,7 +43,7 @@ Free Answering Machine Detection module for FreeSWITCH.
 
 %build
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:%{default_freeswitch_pkg_path}
-make
+make MODDIR=%{modules_dir}
 
 ##############################################################################
 # Install
@@ -51,7 +51,7 @@ make
 
 %install
 [ "%{buildroot}" != '/' ] && rm -rf %{buildroot}
-make install DESTDIR=%{buildroot}
+make install MODDIR=%{modules_dir} DESTDIR=%{buildroot}
 
 ##############################################################################
 # Clean

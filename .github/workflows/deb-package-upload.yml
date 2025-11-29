@@ -23,7 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        debian: [bookworm, trixie]
+        debian: [bullseye, bookworm]
 
     container:
       image: debian:${{ matrix.debian }}
@@ -31,10 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Export .env variables to GITHUB_ENV
+      - name: Export .env.debian variables to GITHUB_ENV
         run: |
-          if [ -f .env ]; then
-            grep -v '^#' .env | while IFS='=' read -r key value; do
+          if [ -f .env.debian ]; then
+            grep -v '^#' .env.debian | while IFS='=' read -r key value; do
               # Remove surrounding quotes and trim whitespace
               clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
               # Only export non-empty keys
@@ -57,7 +57,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
           echo "deb-src [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
           apt-get update
-          apt-get install -y libfreeswitch
+          apt-get install -y libfreeswitch-dev
 
       - name: Prepare Environment for Build DEB package
         run: |

@@ -16,14 +16,14 @@ build-indep:
 	( \
 		cd ${WORK_DIR}/mod-free-amd; \
 		export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${DEFAULT_FREESWITCH_PKG_DIR}; \
-		$(MAKE); \
+		$(MAKE) MODDIR=${MODULES_DIR} ; \
 	)
 
 override_dh_install:
 	dh_install
 	( \
 		cd ${WORK_DIR}/mod-free-amd; \
-		$(MAKE) install DESTDIR=$(DEFAULT_INSTALL_DIR); \
+		$(MAKE) install MODDIR=${MODULES_DIR} DESTDIR=$(DEFAULT_INSTALL_DIR); \
 	)
 	install -Dpm 0644 $(DEFAULT_INSTALL_DIR)/mod_free_amd.so $(TMP)${MODULES_DIR}/mod_free_amd.so
 

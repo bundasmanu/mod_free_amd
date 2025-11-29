@@ -1,6 +1,6 @@
 MODNAME = mod_free_amd.so
 MODOBJ = mod_free_amd.o
-MODDIR = /opt/freeswitch/mod
+MODDIR ?= /opt/freeswitch/mod
 MODCFLAGS = -Wall -Werror
 # MODLDFLAGS = -lssl
 
