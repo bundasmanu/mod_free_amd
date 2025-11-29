@@ -69,8 +69,7 @@ jobs:
 
       - name: Build DEB package
         run: |
-          cd $WORK_DIR/debian
-          ls -la
+          cd $WORK_DIR
           dpkg-buildpackage -us -uc -b
 
       - name: Upload DEBs
