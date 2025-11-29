@@ -33,15 +33,29 @@ jobs:
 
       - name: Export .env.debian variables to GITHUB_ENV
         run: |
+          echo "Checking for .env.debian file..."
           if [ -f .env.debian ]; then
+            echo ".env.debian file found!"
+            echo "Contents:"
+            cat .env.debian
+            echo "---"
             grep -v '^#' .env.debian | while IFS='=' read -r key value; do
               # Remove surrounding quotes and trim whitespace
               clean_value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
               # Only export non-empty keys
               if [[ -n "$key" ]]; then
+                echo "Exporting: $key=$clean_value"
                 echo "$key=$clean_value" >> $GITHUB_ENV
               fi
             done
+            echo "---"
+            echo "Variables in GITHUB_ENV:"
+            cat $GITHUB_ENV | grep -E "(WORK_DIR|VERSION|RELEASE)" || echo "No WORK_DIR, VERSION, or RELEASE found"
+          else
+            echo "ERROR: .env.debian file NOT found!"
+            echo "Current directory: $(pwd)"
+            echo "Files in current directory:"
+            ls -la
           fi
 
       - name: Install build dependencies
