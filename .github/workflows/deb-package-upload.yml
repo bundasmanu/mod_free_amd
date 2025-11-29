@@ -1,6 +1,6 @@
 ---
 
-name: Build and Upload RPM (CentOS 7)
+name: Build and Upload DEBS
 
 on:
   push:
@@ -65,7 +65,7 @@ jobs:
           mkdir -p $WORK_DIR/debian
           cp -rp Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
           cp -rp DEB/debian/* $WORK_DIR/debian/
-          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" debian/changelog
+          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/debian/changelog
 
       - name: Build DEB package
         run: |
