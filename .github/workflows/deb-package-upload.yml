@@ -74,9 +74,14 @@ jobs:
         run: |
           cd $WORK_DIR
           MODULES_DIR=${MOD_DIR} dpkg-buildpackage -us -uc -b
+          # dpkg-buildpackage creates .deb files in the parent directory
+          DEB_PARENT_DIR=$(dirname $WORK_DIR)
+          echo "DEB_PARENT_DIR=$DEB_PARENT_DIR" >> $GITHUB_ENV
+          echo "Generated .deb files:"
+          ls -lh $DEB_PARENT_DIR/*.deb || echo "No .deb files found in $DEB_PARENT_DIR"
 
       - name: Upload DEBs
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.VERSION }}-${{ env.RELEASE }}
-          path: ${{ env.WORK_DIR }}/*.deb
+          path: ${{ env.DEB_PARENT_DIR }}/*.deb
