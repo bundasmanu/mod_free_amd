@@ -1,4 +1,3 @@
----
 
 name: Build and Upload DEBS
 
@@ -62,16 +61,16 @@ jobs:
       - name: Prepare Environment for Build DEB package
         run: |
           mkdir -p $WORK_DIR/mod-free-amd
-          mkdir -p $WORK_DIR/debian
           cp -rp Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
-          cp -rp DEB/debian/* $WORK_DIR/debian/
-          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/debian/changelog
+          cp -rp DEB/debian $WORK_DIR/mod-free-amd/  # copy as a directory
+          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/mod-free-amd/debian/changelog
+
 
       - name: Build DEB package
         run: |
           cd $WORK_DIR
           ls -la .
-          cat debian/changelog
+          ls -la debian
           dpkg-buildpackage -us -uc -b
 
       - name: Upload DEBs
