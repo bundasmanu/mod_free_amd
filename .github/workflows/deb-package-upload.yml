@@ -63,8 +63,8 @@ jobs:
         run: |
           mkdir -p $WORK_DIR/mod-free-amd
           mkdir -p $WORK_DIR/debian
-          cp Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
-          cp DEB/debian/* $WORK_DIR/debian/
+          cp -r Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
+          cp -r DEB/debian/* $WORK_DIR/debian/
           sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/debian/changelog
 
       - name: Build DEB package
