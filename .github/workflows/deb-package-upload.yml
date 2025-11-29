@@ -64,29 +64,15 @@ jobs:
 
       - name: Prepare Environment for Build DEB package
         run: |
-          echo "WORK_DIR=${WORK_DIR:-NOT_SET}"
-          echo "VERSION=${VERSION:-NOT_SET}"
-          echo "RELEASE=${RELEASE:-NOT_SET}"
           mkdir -p $WORK_DIR/mod-free-amd
           mkdir -p $WORK_DIR/debian
           cp -r Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
           cp -r DEB/debian/* $WORK_DIR/debian/
           sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/debian/changelog
-          echo "Files created:"
-          ls -la $WORK_DIR/mod-free-amd/
-          ls -la $WORK_DIR/debian/
 
       - name: Build DEB package
         run: |
-          echo "Current directory before cd: $(pwd)"
-          echo "WORK_DIR=${WORK_DIR:-NOT_SET}"
           cd $WORK_DIR
-          echo "Current directory after cd: $(pwd)"
-          echo "Contents of WORK_DIR:"
-          ls -la .
-          echo "Checking for debian directory:"
-          ls -la debian/ || echo "debian/ not found!"
-          cat debian/changelog
           dpkg-buildpackage -us -uc -b
 
       - name: Upload DEBs
