@@ -1,0 +1,15 @@
+Source: freeswitch-mod-free-amd
+Section: base
+Priority: standard
+Maintainer: Gustavo Almeida <galmeida@broadvoice.com>
+Homepage: <https://github.com/freeswitch/mod_unimrcp>
+Standards-Version: 4.6.1
+
+Package: freeswitch-mod-free-amd
+Architecture: amd64
+Depends: freeswitch
+Build-Depends: debhelper (>= 13) libfreeswitch
+Description: mod-free-amd for FreeSWITCH
+  Free Answering Machine Detection module
+  This package contains AMD module for FreeSWITCH.
+  Free Answering Machine Detection module for FreeSWITCH.

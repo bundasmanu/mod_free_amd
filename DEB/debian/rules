@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+PACKAGE=$(shell dh_listpackages)
+DEFAULT_INSTALL_DIR=${MODULES_DIR}
+TMP=`pwd`/debian/$(PACKAGE)
+PARENT_DIR_INSTALLED_PKG := $(shell dirname "${WORK_DIR}")
+DEFAULT_FREESWITCH_PKG_DIR=/usr/share/freeswitch/pkgconfig
+
+%:
+	dh $@
+
+build:
+	dh $@
+
+build-indep:
+	( \
+		cd ${WORK_DIR}/mod-free-amd; \
+		export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${DEFAULT_FREESWITCH_PKG_DIR}; \
+		$(MAKE); \
+	)
+
+override_dh_install:
+	dh_install
+	( \
+		cd ${WORK_DIR}/mod-free-amd; \
+		$(MAKE) install DESTDIR=$(DEFAULT_INSTALL_DIR); \
+	)
+	install -Dpm 0644 $(DEFAULT_INSTALL_DIR)/mod_free_amd.so $(TMP)${MODULES_DIR}/mod_free_amd.so
+
+clean:
+	dh_clean
+
+override_dh_fixperms:
+	chown ${USER_NAME}:${GROUP_NAME} $(TMP)${MODULES_DIR}/mod_free_amd.so
+
+override_dh_shlibdeps:
+	# Do nothing
+
+binary: build-indep
+	dh $@
+	rm -rf $(DEFAULT_INSTALL_DIR)
