@@ -1,0 +1,112 @@
+---
+name: Build DEB Package (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version'
+        required: false
+        default: '1.10.12'
+        type: string
+      release:
+        description: 'Package release number'
+        required: false
+        default: '1'
+        type: string
+      work_dir:
+        description: 'Working directory for build'
+        required: false
+        default: '/tmp'
+        type: string
+      mod_dir:
+        description: 'Module installation directory'
+        required: false
+        default: '/usr/lib/freeswitch/mod'
+        type: string
+      fs_user:
+        description: 'FreeSWITCH user'
+        required: false
+        default: 'freeswitch'
+        type: string
+      fs_group:
+        description: 'FreeSWITCH group'
+        required: false
+        default: 'freeswitch'
+        type: string
+      freeswitch_devel_version:
+        description: 'FreeSWITCH development version'
+        required: false
+        default: ''
+        type: string
+      debian:
+        description: 'Debian version (bullseye or bookworm)'
+        required: false
+        default: 'bookworm'
+        type: choice
+        options:
+          - bullseye
+          - bookworm
+
+jobs:
+  personal-build-deb:
+    runs-on: ubuntu-latest
+
+    env:
+      SIGNALWIRE_USER: ${{ secrets.SIGNALWIRE_USER }}
+      SIGNALWIRE_PASSWORD: ${{ secrets.SIGNALWIRE_PASSWORD }}
+      VERSION: ${{ inputs.version }}
+      RELEASE: ${{ inputs.release }}
+      WORK_DIR: ${{ inputs.work_dir }}
+      MOD_DIR: ${{ inputs.mod_dir }}
+      FS_USER: ${{ inputs.fs_user }}
+      FS_GROUP: ${{ inputs.fs_group }}
+
+    container:
+      image: debian:${{ inputs.debian }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y wget gnupg2 lsb-release devscripts build-essential fakeroot lintian dh-make debhelper pkg-config
+
+      - name: Add Freeswitch repo
+        run: |
+          wget --http-user=${SIGNALWIRE_USER} --http-password=${SIGNALWIRE_PASSWORD} -O /usr/share/keyrings/signalwire-freeswitch-repo.gpg https://freeswitch.signalwire.com/repo/deb/debian-release/signalwire-freeswitch-repo.gpg
+          echo "machine freeswitch.signalwire.com login ${SIGNALWIRE_USER} password ${SIGNALWIRE_PASSWORD}" > /etc/apt/auth.conf
+          chmod 600 /etc/apt/auth.conf
+          echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
+          echo "deb-src [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
+          apt-get update
+          if [ -n "${{ inputs.freeswitch_devel_version }}" ]; then
+            apt-get install -y libfreeswitch-dev=${{ inputs.freeswitch_devel_version }}
+          else
+            apt-get install -y libfreeswitch-dev
+          fi
+
+      - name: Prepare Environment for Build DEB package
+        run: |
+          mkdir -p $WORK_DIR/mod-free-amd
+          mkdir -p $WORK_DIR/debian
+          cp -r Makefile mod_free_amd.c $WORK_DIR/mod-free-amd/
+          cp -r DEB/debian/* $WORK_DIR/debian/
+          sed -i "s/_VERSION_/${VERSION}/; s/_RELEASE_/${RELEASE}/" $WORK_DIR/debian/changelog
+
+      - name: Build DEB package
+        run: |
+          cd $WORK_DIR
+          MODULES_DIR=${MOD_DIR} dpkg-buildpackage -us -uc -b
+          DEB_PARENT_DIR=$(dirname $WORK_DIR)
+          mkdir -p /tmp/deb-artifacts
+          mv $DEB_PARENT_DIR/*.deb /tmp/deb-artifacts/ 2>/dev/null || true
+
+      - name: Upload DEB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.debian }}-${{ inputs.version }}-${{ inputs.release }}
+          path: /tmp/deb-artifacts/*.deb
+          retention-days: 1
+
