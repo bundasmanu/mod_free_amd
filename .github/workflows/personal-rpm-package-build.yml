@@ -40,10 +40,6 @@ on:
         default: '1.10.11.release.18'
         type: string
 
-  pull_request:
-    branches:
-      - '**'
-
 jobs:
   personal-build-rpm:
     runs-on: ubuntu-latest
@@ -62,17 +58,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set default values when inputs are empty
-        run: |
-          echo "VERSION=${VERSION:-1.10.11}" >> $GITHUB_ENV
-          echo "RELEASE=${RELEASE:-1}" >> $GITHUB_ENV
-          echo "WORK_DIR=${WORK_DIR:-/usr}" >> $GITHUB_ENV
-          echo "MOD_DIR=${MOD_DIR:-/usr/lib/freeswitch/mod}" >> $GITHUB_ENV
-          echo "FS_USER=${FS_USER:-freeswitch}" >> $GITHUB_ENV
-          echo "FS_GROUP=${FS_GROUP:-freeswitch}" >> $GITHUB_ENV
-          echo "FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION:-1.10.11.release.18}" >> $GITHUB_ENV
-          echo "Using FREESWITCH_DEVEL_VERSION: ${FREESWITCH_DEVEL_VERSION:-1.10.11.release.18}"
 
       - name: Build Docker image
         run: |

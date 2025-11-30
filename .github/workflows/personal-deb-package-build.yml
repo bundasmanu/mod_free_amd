@@ -47,9 +47,6 @@ on:
         options:
           - bullseye
           - bookworm
-  pull_request:
-    branches:
-      - '**'
 
 jobs:
   personal-build-deb:
@@ -66,22 +63,10 @@ jobs:
       FS_GROUP: ${{ inputs.fs_group }}
 
     container:
-      image: debian:${{ inputs.debian || 'bookworm' }}
+      image: debian:${{ inputs.debian }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set default values when inputs are empty
-        run: |
-          DEBIAN_INPUT="${{ inputs.debian }}"
-          echo "VERSION=${VERSION:-1.10.12}" >> $GITHUB_ENV
-          echo "RELEASE=${RELEASE:-1}" >> $GITHUB_ENV
-          echo "WORK_DIR=${WORK_DIR:-/tmp}" >> $GITHUB_ENV
-          echo "MOD_DIR=${MOD_DIR:-/usr/lib/freeswitch/mod}" >> $GITHUB_ENV
-          echo "FS_USER=${FS_USER:-freeswitch}" >> $GITHUB_ENV
-          echo "FS_GROUP=${FS_GROUP:-freeswitch}" >> $GITHUB_ENV
-          echo "DEBIAN_VERSION=${DEBIAN_INPUT:-bookworm}" >> $GITHUB_ENV
-          echo "Using defaults - VERSION: ${VERSION:-1.10.12}, RELEASE: ${RELEASE:-1}, DEBIAN: ${DEBIAN_INPUT:-bookworm}"
 
       - name: Install build dependencies
         run: |
@@ -121,7 +106,7 @@ jobs:
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.DEBIAN_VERSION || inputs.debian || 'bookworm' }}-${{ env.VERSION }}-${{ env.RELEASE }}
+          name: ${{ inputs.debian }}-${{ inputs.version }}-${{ inputs.release }}
           path: /tmp/deb-artifacts/*.deb
           retention-days: 1
 
