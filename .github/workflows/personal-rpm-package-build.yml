@@ -1,0 +1,107 @@
+---
+name: Build RPM Package (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version'
+        required: false
+        default: '1.10.11'
+        type: string
+      release:
+        description: 'Package release number'
+        required: false
+        default: '1'
+        type: string
+      work_dir:
+        description: 'Working directory for build'
+        required: false
+        default: '/usr'
+        type: string
+      mod_dir:
+        description: 'Module installation directory'
+        required: false
+        default: '/usr/lib/freeswitch/mod'
+        type: string
+      fs_user:
+        description: 'FreeSWITCH user'
+        required: false
+        default: 'freeswitch'
+        type: string
+      fs_group:
+        description: 'FreeSWITCH group'
+        required: false
+        default: 'freeswitch'
+        type: string
+      freeswitch_devel_version:
+        description: 'FreeSWITCH development version'
+        required: false
+        default: '1.10.11.release.18'
+        type: string
+
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  personal-build-rpm:
+    runs-on: ubuntu-latest
+
+    env:
+      SIGNALWIRE_USER: ${{ secrets.SIGNALWIRE_USER }}
+      SIGNALWIRE_PASSWORD: ${{ secrets.SIGNALWIRE_PASSWORD }}
+      VERSION: ${{ inputs.version }}
+      RELEASE: ${{ inputs.release }}
+      WORK_DIR: ${{ inputs.work_dir }}
+      MOD_DIR: ${{ inputs.mod_dir }}
+      FS_USER: ${{ inputs.fs_user }}
+      FS_GROUP: ${{ inputs.fs_group }}
+      FREESWITCH_DEVEL_VERSION: ${{ inputs.freeswitch_devel_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f Dockerfile-centos7 \
+            --build-arg WORK_DIR=${WORK_DIR} \
+            --build-arg SIGNALWIRE_USER=${SIGNALWIRE_USER} \
+            --build-arg SIGNALWIRE_PASSWORD=${SIGNALWIRE_PASSWORD} \
+            --build-arg VERSION=${VERSION} \
+            --build-arg RELEASE=${RELEASE} \
+            --build-arg FS_USER=${FS_USER} \
+            --build-arg FS_GROUP=${FS_GROUP} \
+            --build-arg MOD_DIR=${MOD_DIR} \
+            --build-arg FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION} \
+            -t rpm-builder .
+
+      - name: Create temporary output folder
+        run: mkdir -p /tmp/rpms
+
+      - name: Run Docker container to build RPMs
+        run: |
+          docker run --rm \
+            -v /tmp/rpms:${WORK_DIR}/rpmbuild/RPMS \
+            -e WORK_DIR=${WORK_DIR} \
+            -e SIGNALWIRE_USER=${SIGNALWIRE_USER} \
+            -e SIGNALWIRE_PASSWORD=${SIGNALWIRE_PASSWORD} \
+            -e VERSION=${VERSION} \
+            -e RELEASE=${RELEASE} \
+            -e FS_USER=${FS_USER} \
+            -e FS_GROUP=${FS_GROUP} \
+            -e MOD_DIR=${MOD_DIR} \
+            -e FREESWITCH_DEVEL_VERSION=${FREESWITCH_DEVEL_VERSION} \
+            rpm-builder
+
+      - name: List generated RPMs
+        run: ls -R /tmp/rpms
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.version }}-${{ inputs.release }}
+          path: /tmp/rpms/**/*.rpm
+          retention-days: 1
